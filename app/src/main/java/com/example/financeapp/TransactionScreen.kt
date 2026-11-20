@@ -21,11 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.material3.TextButton
 
 @Composable
 @Suppress("FunctionNaming")
-internal fun TransactionScreen(viewModel: TransactionViewModel = viewModel()) {
+internal fun TransactionScreen(viewModel: TransactionViewModel, showBalance: Boolean, onOpenSettings: () -> Unit) {
     val state = viewModel.uiState
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -35,8 +35,16 @@ internal fun TransactionScreen(viewModel: TransactionViewModel = viewModel()) {
                 .padding(24.dp),
         ) {
             Text(stringResource(R.string.transaction_title))
-            Text(stringResource(R.string.balance_summary, state.balance, state.transactionCount))
-            TransactionForm(state = state, onEvent = viewModel::onEvent)
+            TextButton(onClick = onOpenSettings) {
+                Text(stringResource(R.string.settings_title))
+            }
+            if (showBalance) {
+                Text(stringResource(R.string.balance_summary, state.balance, state.transactionCount))
+            } else {
+                Text(stringResource(R.string.transaction_count, state.transactionCount))
+            }
+            TransactionForm(viewModel, state)
+            TransactionHistory(transactions = state.transactions)
             ErrorText(error = state.error)
             Button(onClick = viewModel::addTransaction) {
                 Text(stringResource(R.string.transaction_add))
@@ -48,29 +56,33 @@ internal fun TransactionScreen(viewModel: TransactionViewModel = viewModel()) {
 
 @Composable
 @Suppress("FunctionNaming")
-private fun TransactionForm(state: MainUiState, onEvent: (MainUiEvent) -> Unit) {
+private fun TransactionForm(viewModel: TransactionViewModel, state: MainUiState) {
     OutlinedTextField(
         value = state.description,
-        onValueChange = { onEvent(MainUiEvent.DescriptionChanged(it)) },
+        onValueChange = { viewModel.onEvent(MainUiEvent.DescriptionChanged(it)) },
         label = { Text(stringResource(R.string.transaction_description)) },
     )
     OutlinedTextField(
         value = state.amount,
-        onValueChange = { onEvent(MainUiEvent.AmountChanged(it)) },
+        onValueChange = { viewModel.onEvent(MainUiEvent.AmountChanged(it)) },
         label = { Text(stringResource(R.string.transaction_amount)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
     )
     Row {
         FilterChip(
             selected = state.type == TransactionType.EXPENSE,
-            onClick = { onEvent(MainUiEvent.TypeChanged(TransactionType.EXPENSE)) },
+            onClick = { viewModel.onEvent(MainUiEvent.TypeChanged(TransactionType.EXPENSE)) },
             label = { Text(stringResource(R.string.transaction_expense)) },
         )
         FilterChip(
             selected = state.type == TransactionType.INCOME,
-            onClick = { onEvent(MainUiEvent.TypeChanged(TransactionType.INCOME)) },
+            onClick = { viewModel.onEvent(MainUiEvent.TypeChanged(TransactionType.INCOME)) },
             label = { Text(stringResource(R.string.transaction_income)) },
         )
+    }
+    ErrorText(error = state.error)
+    Button(onClick = viewModel::addTransaction) {
+        Text(stringResource(R.string.transaction_add))
     }
 }
 
