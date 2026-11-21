@@ -18,4 +18,6 @@
     <string name="settings_title">Настройки</string>
     <string name="settings_show_balance">Показывать баланс</string>
     <string name="settings_back">Назад</string>
+    <string name="transaction_loading">Загрузка операций…</string>
+    <string name="transaction_database_error">Не удалось прочитать или сохранить операции</string>
 </resources>

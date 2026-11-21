@@ -46,7 +46,10 @@ internal fun TransactionScreen(viewModel: TransactionViewModel, showBalance: Boo
             TransactionForm(viewModel, state)
             TransactionHistory(transactions = state.transactions)
             ErrorText(error = state.error)
-            Button(onClick = viewModel::addTransaction) {
+            Button(
+                onClick = viewModel::addTransaction,
+                enabled = state.isDatabaseReady && !state.isSaving,
+            ) {
                 Text(stringResource(R.string.transaction_add))
             }
             TransactionHistory(transactions = state.transactions)
@@ -61,23 +64,27 @@ private fun TransactionForm(viewModel: TransactionViewModel, state: MainUiState)
         value = state.description,
         onValueChange = { viewModel.onEvent(MainUiEvent.DescriptionChanged(it)) },
         label = { Text(stringResource(R.string.transaction_description)) },
+        enabled = state.isDatabaseReady && !state.isSaving,
     )
     OutlinedTextField(
         value = state.amount,
         onValueChange = { viewModel.onEvent(MainUiEvent.AmountChanged(it)) },
         label = { Text(stringResource(R.string.transaction_amount)) },
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+        enabled = state.isDatabaseReady && !state.isSaving,
     )
     Row {
         FilterChip(
             selected = state.type == TransactionType.EXPENSE,
             onClick = { viewModel.onEvent(MainUiEvent.TypeChanged(TransactionType.EXPENSE)) },
             label = { Text(stringResource(R.string.transaction_expense)) },
+            enabled = state.isDatabaseReady && !state.isSaving,
         )
         FilterChip(
             selected = state.type == TransactionType.INCOME,
             onClick = { viewModel.onEvent(MainUiEvent.TypeChanged(TransactionType.INCOME)) },
             label = { Text(stringResource(R.string.transaction_income)) },
+            enabled = state.isDatabaseReady && !state.isSaving,
         )
     }
     ErrorText(error = state.error)
@@ -93,6 +100,7 @@ private fun ErrorText(error: TransactionError?) {
     val textId = when (error) {
         TransactionError.INVALID_INPUT -> R.string.transaction_invalid_input
         TransactionError.AMOUNT_TOO_LARGE -> R.string.transaction_amount_too_large
+        TransactionError.DATABASE_ERROR -> R.string.transaction_database_error
     }
     Text(stringResource(textId), color = MaterialTheme.colorScheme.error)
 }
